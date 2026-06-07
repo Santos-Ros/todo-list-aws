@@ -4,6 +4,7 @@ pipeline {
         stage('Get Code') {
             agent { label 'CP1.4-jenkins-02' }
             steps {
+                cleanWs()   // ← añadir esta línea al principio
                 git credentialsId: 'github-token-id',
                     branch: 'develop',
                     url: 'https://github.com/Santos-Ros/todo-list-aws.git'
