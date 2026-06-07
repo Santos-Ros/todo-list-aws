@@ -1,0 +1,50 @@
+pipeline {
+    agent none
+    stages {
+        stage('Get Code') {
+            agent { label 'CP1.4-jenkins-02' }
+            steps {
+                git credentialsId: 'github-token-id',
+                    branch: 'master',
+                    url: 'https://github.com/Santos-Ros/todo-list-aws.git'
+                dir('config') {
+                    deleteDir()
+                }
+                sh 'git clone --single-branch --branch production https://github.com/Santos-Ros/todo-list-aws-config.git config'
+                sh 'cp config/samconfig.toml .'
+            }
+        }
+        stage('Deploy (Production)') {
+            agent { label 'CP1.4-jenkins-02' }
+            steps {
+                echo 'Building project with SAM...'
+                sh 'sam build'
+                echo 'Validating template...'
+                sh 'sam validate --region us-east-1'
+                echo 'Deploying to Production environment...'
+                sh 'sam deploy --config-env production --no-confirm-changeset || true'
+                sh '''
+                    aws cloudformation describe-stacks \
+                        --stack-name todo-list-aws-production \
+                        --region us-east-1 \
+                        --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
+                        --output text > api_url.txt
+                '''
+                stash name: 'workspace-cd', includes: '**/*'
+            }
+        }
+        stage('REST Test') {
+            agent { label 'CP1.4-jenkins-03' }
+            steps {
+                unstash 'workspace-cd'
+                script {
+                    env.BASE_URL = readFile('api_url.txt').trim()
+                }
+                echo 'Running REST integration tests (read-only)...'
+                sh 'pytest --junitxml=report.xml -m "readonly" test/integration/todoApiTest.py || pytest --junitxml=report.xml test/integration/todoApiTest.py'
+                echo 'Publicando resultados...'
+                junit 'report.xml'
+            }
+        }
+    }
+}
