@@ -36,9 +36,10 @@ pipeline {
         stage('REST Test') {
             agent { label 'CP1.4-jenkins-03' }
             steps {
-                unstash 'workspace-cd'
-                script {
-                    env.BASE_URL = readFile('api_url.txt').trim()
+                withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
+                    unstash 'workspace-cd'
+                    script {
+                        env.BASE_URL = readFile('api_url.txt').trim()
                 }
                 echo 'Running REST integration tests (read-only)...'
                 sh 'pytest --junitxml=report.xml -m "readonly" test/integration/todoApiTest.py || pytest --junitxml=report.xml test/integration/todoApiTest.py'
