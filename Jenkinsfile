@@ -91,6 +91,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'github-token-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')]) {
                         echo 'Haciendo merge a master...'
                         sh '''
+                            git config merge.ours.driver true
                             git config user.name "Santos Ros"
                             git config user.email "santosrospicazo@outlook.com"
                             git fetch --all
