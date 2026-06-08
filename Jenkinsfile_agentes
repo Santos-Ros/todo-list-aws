@@ -83,7 +83,7 @@ pipeline {
                             sleep 10
                         done
                         echo "Esperando estabilizacion final..."
-                        sleep 180
+                        sleep 300
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
