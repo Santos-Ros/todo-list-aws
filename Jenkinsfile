@@ -47,6 +47,7 @@ pipeline {
             agent { label 'CP1.4-jenkins-02' }
             steps {
                 withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
+                    sh 'rm -rf config-env'
                     sh 'git clone --single-branch --branch staging https://github.com/Santos-Ros/todo-list-aws-config.git config-env'
                     sh 'cp config-env/samconfig.toml .'
                     echo 'Building project with SAM...'
@@ -68,13 +69,14 @@ pipeline {
                         for i in $(seq 1 12); do
                             echo "Intento $i de 12..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
-                            echo "Status: $STATUS"
+                            echo "Status GET: $STATUS"
                             if [ "$STATUS" = "200" ]; then
                                 echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
+                        sleep 15
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
