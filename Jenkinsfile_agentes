@@ -4,26 +4,19 @@ pipeline {
         stage('Get Code') {
             agent { label 'CP1.4-jenkins-02' }
             steps {
-                withEnv(["PATH=/home/ubuntu/.local/bin:${env.PATH}"]) {
-                    sh 'whoami'
-                    sh 'hostname'
+                withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
                     git credentialsId: 'github-token-id',
                         branch: 'master',
                         url: 'https://github.com/Santos-Ros/todo-list-aws.git'
-                    dir('config') {
-                        deleteDir()
-                    }
-                    sh 'git clone --single-branch --branch production https://github.com/Santos-Ros/todo-list-aws-config.git config'
-                    sh 'cp config/samconfig.toml .'
                 }
             }
         }
         stage('Deploy (Production)') {
             agent { label 'CP1.4-jenkins-02' }
             steps {
-                withEnv(["PATH=/home/ubuntu/.local/bin:${env.PATH}"]) {
-                    sh 'whoami'
-                    sh 'hostname'
+                withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
+                    sh 'git clone --single-branch --branch production https://github.com/Santos-Ros/todo-list-aws-config.git config-env'
+                    sh 'cp config-env/samconfig.toml .'
                     echo 'Building project with SAM...'
                     sh 'sam build'
                     echo 'Validating template...'
@@ -37,6 +30,8 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
+                    echo 'Esperando que las Lambdas se inicialicen...'
+                    sh 'sleep 60'
                     stash name: 'workspace-cd', includes: '**/*'
                 }
             }
@@ -44,10 +39,8 @@ pipeline {
         stage('REST Test') {
             agent { label 'CP1.4-jenkins-03' }
             steps {
-                withEnv(["PATH=/home/ubuntu/.local/bin:${env.PATH}"]) {
+                withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
                     unstash 'workspace-cd'
-                    sh 'whoami'
-                    sh 'hostname'
                     script {
                         env.BASE_URL = readFile('api_url.txt').trim()
                     }
