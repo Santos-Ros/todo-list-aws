@@ -65,6 +65,8 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
+                    echo 'Esperando que las Lambdas se inicialicen...'
+                    sh 'sleep 30'
                     stash name: 'workspace-ci', includes: '**/*'
                 }
             }
@@ -100,7 +102,7 @@ pipeline {
                             git checkout master
                             git pull origin master
                             git merge develop --no-edit
-                            git push https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Santos-Ros/todo-list-aws.git master
+                            git push https://Santos-Ros:${GIT_TOKEN}@github.com/Santos-Ros/todo-list-aws.git master
                         '''
                     }
                 }
