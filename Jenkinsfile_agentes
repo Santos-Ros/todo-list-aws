@@ -80,20 +80,19 @@ pipeline {
                             fi
                             sleep 10
                         done
-                        python3 -c "
-                    import requests, time
+                        cat > /tmp/warmup.py << 'PYEOF'
+                    import requests
+                    import time
                     BASE_URL = open('api_url.txt').read().strip()
                     for i in range(10):
-                        try:
-                            r = requests.post(BASE_URL + '/todos', json={'text': 'warmup'})
-                            print('POST status:', r.status_code, r.text[:100])
-                            if r.status_code == 200:
-                                print('POST listo!')
-                                break
-                        except Exception as e:
-                            print('Error:', e)
+                        r = requests.post(BASE_URL + '/todos', json={'text': 'warmup'})
+                        print('POST status:', r.status_code)
+                        if r.status_code == 200:
+                            print('POST listo!')
+                            break
                         time.sleep(10)
-                    "
+                    PYEOF
+                        python3 /tmp/warmup.py
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
