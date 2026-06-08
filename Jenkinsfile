@@ -62,8 +62,23 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
-                    echo 'Esperando que las Lambdas se inicialicen...'
-                    sh 'sleep 60'
+                    echo 'Esperando a las Lambdas...'
+                    sh '''
+                        BASE_URL=$(cat api_url.txt)
+                        echo "Warm-up GET..."
+                        curl -s ${BASE_URL}/todos || true
+                        sleep 10
+                        echo "Warm-up POST..."
+                        curl -s -X POST ${BASE_URL}/todos \
+                            -H "Content-Type: application/json" \
+                            -d '{"text":"warmup"}' || true
+                        sleep 10
+                        echo "Warm-up PUT/DELETE..."
+                        curl -s -X POST ${BASE_URL}/todos \
+                            -H "Content-Type: application/json" \
+                            -d '{"text":"warmup2"}' || true
+                        sleep 10
+                    '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
             }
