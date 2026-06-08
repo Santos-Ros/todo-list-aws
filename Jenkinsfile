@@ -62,31 +62,19 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
-                    echo 'Esperando a las Lambdas...'
+                    echo 'Esperando a que las Lambdas estén listas...'
                     sh '''
                         BASE_URL=$(cat api_url.txt)
-                        echo "Warm-up GET list..."
-                        curl -s "${BASE_URL}/todos" || true
-                        sleep 5
-                        echo "Warm-up POST..."
-                        RESPONSE=$(curl -s -X POST "${BASE_URL}/todos" \
-                            -H "Content-Type: application/json" \
-                            -d "{\"text\":\"warmup\"}")
-                        echo $RESPONSE
-                        WARMUP_ID=$(echo $RESPONSE | python3 -c "import sys,json; d=json.load(sys.stdin); b=json.loads(d['body']); print(b['id'])" 2>/dev/null || true)
-                        echo "WARMUP_ID: $WARMUP_ID"
-                        sleep 5
-                        echo "Warm-up GET by ID..."
-                        curl -s "${BASE_URL}/todos/${WARMUP_ID}" || true
-                        sleep 5
-                        echo "Warm-up PUT..."
-                        curl -s -X PUT "${BASE_URL}/todos/${WARMUP_ID}" \
-                            -H "Content-Type: application/json" \
-                            -d "{\"text\":\"warmup-updated\",\"checked\":false}" || true
-                        sleep 5
-                        echo "Warm-up DELETE..."
-                        curl -s -X DELETE "${BASE_URL}/todos/${WARMUP_ID}" || true
-                        sleep 10
+                        for i in $(seq 1 12); do
+                            echo "Intento $i de 12..."
+                            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
+                            echo "Status: $STATUS"
+                            if [ "$STATUS" = "200" ]; then
+                                echo "API lista!"
+                                break
+                            fi
+                            sleep 10
+                        done
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
