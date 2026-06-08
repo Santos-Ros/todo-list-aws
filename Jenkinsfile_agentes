@@ -72,27 +72,16 @@ pipeline {
                     sh '''
                         BASE_URL=$(cat api_url.txt)
                         for i in $(seq 1 12); do
+                            echo "Intento $i de 12..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
                             STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
-                            echo "Intento $i - GET: $STATUS  GET ID: $STATUS_ID"
+                            echo "Status GET: $STATUS  GET ID: $STATUS_ID"
                             if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
+                                echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
-                        cat > /tmp/warmup.py << 'PYEOF'
-                    import requests
-                    import time
-                    BASE_URL = open('api_url.txt').read().strip()
-                    for i in range(10):
-                        r = requests.post(BASE_URL + '/todos', json={'text': 'warmup'})
-                        print('POST status:', r.status_code)
-                        if r.status_code == 200:
-                            print('POST listo!')
-                            break
-                        time.sleep(10)
-                    PYEOF
-                        python3 /tmp/warmup.py
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
