@@ -66,20 +66,18 @@ pipeline {
                     echo 'Esperando a que las Lambdas estén listas...'
                     sh '''
                         BASE_URL=$(cat api_url.txt)
-                        for i in $(seq 1 12); do
-                            echo "Intento $i de 12..."
+                        for i in $(seq 1 24); do
+                            echo "Intento $i de 24..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
-                            echo "Status GET: $STATUS"
-                            if [ "$STATUS" = "200" ]; then
+                            STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
+                            echo "Status GET list: $STATUS  Status GET ID: $STATUS_ID"
+                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
                                 echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
-                        echo "GET por ID y DELETE..."
-                        curl -s "${BASE_URL}/todos/warmup-id" || true
-                        curl -s -X DELETE "${BASE_URL}/todos/warmup-id" || true
-                        sleep 10
+                        sleep 5
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
