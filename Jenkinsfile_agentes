@@ -69,14 +69,16 @@ pipeline {
                             --output text > api_url.txt
                     '''
                     echo 'Esperando a que las Lambdas estén listas...'
+
                     sh '''
                         BASE_URL=$(cat api_url.txt)
                         for i in $(seq 1 24); do
                             echo "Intento $i de 24..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
                             STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
-                            echo "Status GET list: $STATUS  Status GET ID: $STATUS_ID"
-                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
+                            STATUS_POST=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/todos" -H "Content-Type: application/json" -d "{\"text\":\"warmup\"}")
+                            echo "Status GET: $STATUS  GET ID: $STATUS_ID  POST: $STATUS_POST"
+                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ] && [ "$STATUS_POST" = "200" ]; then
                                 echo "API lista!"
                                 break
                             fi
