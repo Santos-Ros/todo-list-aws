@@ -66,19 +66,29 @@ pipeline {
                     echo 'Esperando a que las Lambdas estén listas...'
                     sh '''
                         BASE_URL=$(cat api_url.txt)
-                        for i in $(seq 1 24); do
-                            echo "Intento $i de 24..."
+                        for i in $(seq 1 12); do
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
                             STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
-                            echo "Status GET: $STATUS  GET ID: $STATUS_ID"
+                            echo "Intento $i - GET: $STATUS  GET ID: $STATUS_ID"
                             if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
-                                echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
-                        echo "Esperando estabilizacion final..."
-                        sleep 300
+                        python3 -c "
+                    import requests, time
+                    BASE_URL = open('api_url.txt').read().strip()
+                    for i in range(10):
+                        try:
+                            r = requests.post(BASE_URL + '/todos', json={'text': 'warmup'})
+                            print('POST status:', r.status_code, r.text[:100])
+                            if r.status_code == 200:
+                                print('POST listo!')
+                                break
+                        except Exception as e:
+                            print('Error:', e)
+                        time.sleep(10)
+                    "
                     '''                    
                     stash name: 'workspace-ci', includes: '**/*'
                 }
