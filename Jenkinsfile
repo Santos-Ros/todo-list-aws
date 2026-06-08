@@ -9,11 +9,6 @@ pipeline {
                     git credentialsId: 'github-token-id',
                         branch: 'develop',
                         url: 'https://github.com/Santos-Ros/todo-list-aws.git'
-                    dir('config') {
-                        deleteDir()
-                    }
-                    sh 'git clone --single-branch --branch staging https://github.com/Santos-Ros/todo-list-aws-config.git config'
-                    sh 'cp config/samconfig.toml .'
                 }
             }
         }
@@ -52,6 +47,8 @@ pipeline {
             agent { label 'CP1.4-jenkins-02' }
             steps {
                 withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
+                    sh 'git clone --single-branch --branch staging https://github.com/Santos-Ros/todo-list-aws-config.git config-env'
+                    sh 'cp config-env/samconfig.toml .'
                     echo 'Building project with SAM...'
                     sh 'sam build'
                     echo 'Validating template...'
