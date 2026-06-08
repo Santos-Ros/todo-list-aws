@@ -15,6 +15,7 @@ pipeline {
             agent { label 'CP1.4-jenkins-02' }
             steps {
                 withEnv(["PATH=/home/ubuntu/.local/bin:/usr/local/bin:${env.PATH}"]) {
+                    sh 'rm -rf config-env'
                     sh 'git clone --single-branch --branch production https://github.com/Santos-Ros/todo-list-aws-config.git config-env'
                     sh 'cp config-env/samconfig.toml .'
                     echo 'Building project with SAM...'
