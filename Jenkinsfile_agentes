@@ -71,7 +71,7 @@ pipeline {
                             --output text > api_url.txt
                     '''
                     echo 'Esperando que las Lambdas se inicialicen...'
-                    sh 'sleep 30'
+                    sh 'sleep 60'
                     stash name: 'workspace-ci', includes: '**/*'
                 }
             }
