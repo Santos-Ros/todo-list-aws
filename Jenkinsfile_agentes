@@ -34,8 +34,20 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
-                    echo 'Esperando que las Lambdas se inicialicen...'
-                    sh 'sleep 60'
+                    echo 'Esperando a que las Lambdas estén listas...'
+                    sh '''
+                        BASE_URL=$(cat api_url.txt)
+                        for i in $(seq 1 12); do
+                            echo "Intento $i de 12..."
+                            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
+                            echo "Status: $STATUS"
+                            if [ "$STATUS" = "200" ]; then
+                                echo "API lista!"
+                                break
+                            fi
+                            sleep 10
+                        done
+                    '''
                     stash name: 'workspace-cd', includes: '**/*'
                 }
             }
