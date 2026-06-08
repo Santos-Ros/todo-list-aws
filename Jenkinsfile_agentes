@@ -70,6 +70,8 @@ pipeline {
                             --query "Stacks[0].Outputs[?OutputKey=='BaseUrlApi'].OutputValue" \
                             --output text > api_url.txt
                     '''
+                    echo 'Esperando que las Lambdas se inicialicen...'
+                    sh 'sleep 30'
                     stash name: 'workspace-ci', includes: '**/*'
                 }
             }
