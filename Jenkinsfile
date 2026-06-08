@@ -76,7 +76,7 @@ pipeline {
                             fi
                             sleep 10
                         done
-                        sleep 15
+                        sleep 60
                     '''
                     stash name: 'workspace-ci', includes: '**/*'
                 }
