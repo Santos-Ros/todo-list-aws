@@ -70,16 +70,16 @@ pipeline {
                             echo "Intento $i de 24..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
                             STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
-                            STATUS_POST=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/todos" -H "Content-Type: application/json" -d "{\"text\":\"warmup\"}")
-                            echo "Status GET: $STATUS  GET ID: $STATUS_ID  POST: $STATUS_POST"
-                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ] && [ "$STATUS_POST" = "200" ]; then
+                            echo "Status GET: $STATUS  GET ID: $STATUS_ID"
+                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
                                 echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
-                        sleep 5
-                    '''
+                        echo "Esperando estabilizacion final..."
+                        sleep 180
+                    '''                    
                     stash name: 'workspace-ci', includes: '**/*'
                 }
             }
