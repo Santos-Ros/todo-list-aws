@@ -41,14 +41,14 @@ pipeline {
                         for i in $(seq 1 12); do
                             echo "Intento $i de 12..."
                             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos")
-                            echo "Status GET: $STATUS"
-                            if [ "$STATUS" = "200" ]; then
+                            STATUS_ID=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/todos/test-id")
+                            echo "Status GET: $STATUS  GET ID: $STATUS_ID"
+                            if [ "$STATUS" = "200" ] && [ "$STATUS_ID" != "502" ]; then
                                 echo "API lista!"
                                 break
                             fi
                             sleep 10
                         done
-                        sleep 60
                     '''
                     stash name: 'workspace-cd', includes: '**/*'
                 }
